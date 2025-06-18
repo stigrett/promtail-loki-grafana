@@ -16,3 +16,20 @@ scrape_configs:
     labels:
       job: varlogs
       __path__: /var/log/*log
+
+- job_name: syslog
+  static_configs:
+  - targets:
+      - "localhost"
+    labels:
+      job: syslog
+      __path__: /var/log/remote/syslog.log
+  pipeline_stages:
+  - regex:
+      expression: '^<(?P<priority>\d+)>(?P<timestamp>\S+) (?P<hostname>\S+) (?P<tag>\S+): (?P<message>.*)$'
+  - labels:
+      hostname:
+      tag:
+  - timestamp:
+      source: timestamp
+      format: RFC3339

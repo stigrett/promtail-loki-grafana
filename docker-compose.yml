@@ -1,26 +1,121 @@
 version: '3.7'
+
 services:
+  rsyslog:
+    image: rsyslog/syslog_appliance_alpine:latest
+    ports:
+      - "514:514/tcp"
+      - "514:514/udp"
+    volumes:
+      - ./rsyslog.conf:/etc/rsyslog.conf:ro
+      - rsyslog-logs:/var/log/remote
+    command: ["-n", "-f", "/etc/rsyslog.conf"]
+
   loki:
     image: grafana/loki:latest
     ports:
       - 3100:3100
     volumes:
       - ./loki-config.yml:/etc/loki/loki-config.yaml
+      - loki-data:/tmp/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+
   promtail:
     image: grafana/promtail:latest
     volumes:
       - ./promtail-config.yml:/etc/promtail/promtail-config.yaml
+      - rsyslog-logs:/var/log/remote:ro
+      - /var/log:/var/log:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - rsyslog
+      - loki
+
   prometheus:
-    image: prom/prometheus:v2.46.0
+    image: prom/prometheus:latest
     ports:
       - 9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
     ports:
       - 9100:9100
+    pid: "host"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     ports:
       - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_LOGS=/var/log/grafana
+      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      # NFS volumes for persistent storage (update path when NFS is ready)
+      - grafana-data:/var/lib/grafana
+      - grafana-logs:/var/log/grafana
+      # Provisioning files (can be stored in git)
+      - ./grafana-provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana-provisioning/notifiers:/etc/grafana/provisioning/notifiers:ro
+      - ./grafana-provisioning/plugins:/etc/grafana/provisioning/plugins:ro
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  rsyslog-logs:
+    driver: local
+  loki-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+    # Uncomment and update when NFS is ready:
+    # driver: local
+    # driver_opts:
+    #   type: nfs
+    #   o: "addr=YOUR_NFS_SERVER,rw,nfsvers=4"
+    #   device: ":/path/to/grafana/data"
+  grafana-logs:
+    driver: local
+    # Uncomment and update when NFS is ready:
+    # driver: local
+    # driver_opts:
+    #   type: nfs
+    #   o: "addr=YOUR_NFS_SERVER,rw,nfsvers=4"
+    #   device: ":/path/to/grafana/logs"
