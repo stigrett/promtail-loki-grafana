@@ -93,7 +93,8 @@ services:
       - ./grafana-provisioning/notifiers:/etc/grafana/provisioning/notifiers:ro
       - ./grafana-provisioning/plugins:/etc/grafana/provisioning/plugins:ro
     depends_on:
-      - prometheus - loki
+      - prometheus
+      - loki
 
 volumes:
   rsyslog-logs:
