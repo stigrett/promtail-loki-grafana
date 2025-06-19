@@ -1,0 +1,61 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter for host metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Docker containers discovery
+  - job_name: 'docker-containers'
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+    relabel_configs:
+      # Only keep containers with prometheus scrape annotations
+      - source_labels: [__meta_docker_container_label_prometheus_scrape]
+        regex: 'true'
+        action: keep
+      # Use the container label for job name if specified
+      - source_labels: [__meta_docker_container_label_prometheus_job]
+        target_label: job
+      # Get metrics path from container label or use default
+      - source_labels: [__meta_docker_container_label_prometheus_path]
+        target_label: __metrics_path__
+      # Get port from container label
+      - source_labels: [__address__, __meta_docker_container_label_prometheus_port]
+        regex: '([^:]+):.*'
+        target_label: __address__
+        replacement: '${1}:${2}'
+      # Add container name as instance label
+      - source_labels: [__meta_docker_container_name]
+        target_label: instance
+      # Add additional container labels
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: compose_service
+      - source_labels: [__meta_docker_container_label_com_docker_compose_project]
+        target_label: compose_project
+
+  # External targets - add your external services here
+  - job_name: 'external-targets'
+    static_configs:
+      # Example: Add your external services
+      # - targets: ['external-app1:9090', 'external-app2:8080']
+      #   labels:
+      #     environment: 'production'
+      #     service: 'my-app'
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/targets/*.yml'
+        refresh_interval: 30s

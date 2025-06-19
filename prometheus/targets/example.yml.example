@@ -1,0 +1,15 @@
+# Example external targets configuration
+# Rename this file to .yml extension to activate
+
+- targets:
+    - 'app1.example.com:9090'
+    - 'app2.example.com:8080'
+  labels:
+    environment: 'production'
+    team: 'backend'
+
+- targets:
+    - 'frontend.example.com:3000'
+  labels:
+    environment: 'production'
+    team: 'frontend'
