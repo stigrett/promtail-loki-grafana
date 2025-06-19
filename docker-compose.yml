@@ -9,7 +9,7 @@ services:
     volumes:
       - ./rsyslog.conf:/etc/rsyslog.conf:ro
       - rsyslog-logs:/var/log/remote
-    command: ["-n", "-f", "/etc/rsyslog.conf"]
+  #    command: ["-n", "-f", "/etc/rsyslog.conf"]
 
   loki:
     image: grafana/loki:latest

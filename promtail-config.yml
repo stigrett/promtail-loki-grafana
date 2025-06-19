@@ -26,7 +26,7 @@ scrape_configs:
       __path__: /var/log/remote/syslog.log
   pipeline_stages:
   - regex:
-      expression: '^<(?P<priority>\d+)>(?P<timestamp>\S+) (?P<hostname>\S+) (?P<tag>\S+): (?P<message>.*)$'
+      expression: '^<(?P<priority>\d+)>(?P<timestamp>\S+) (?P<hostname>\S+) (?P<tag>[^:]+)(?P<pid>\[[0-9]+\])?:? (?P<message>.*)$'
   - labels:
       hostname:
       tag:
