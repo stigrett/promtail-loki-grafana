@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 services:
   rsyslog:
@@ -39,9 +39,9 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
 
   node-exporter:
     image: quay.io/prometheus/node-exporter:latest
@@ -53,10 +53,10 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -99,12 +99,24 @@ services:
 volumes:
   rsyslog-logs:
     driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/syslog
+      o: bind
   loki-data:
     driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/loki-data
+      o: bind
   prometheus-data:
     driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/prometheus-data
+      o: bind
   grafana-data:
     driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/grafana-data
+      o: bind
     # Uncomment and update when NFS is ready:
     # driver: local
     # driver_opts:
@@ -113,6 +125,9 @@ volumes:
     #   device: ":/path/to/grafana/data"
   grafana-logs:
     driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/grafana-logs
+      o: bind
     # Uncomment and update when NFS is ready:
     # driver: local
     # driver_opts:
