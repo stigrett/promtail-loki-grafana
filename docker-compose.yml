@@ -25,7 +25,6 @@ services:
     volumes:
       - ./promtail-config.yml:/etc/promtail/promtail-config.yaml
       - rsyslog-logs:/var/log/remote:ro
-      - /var/log:/var/log:ro
     command: -config.file=/etc/promtail/promtail-config.yaml
     depends_on:
       - rsyslog
