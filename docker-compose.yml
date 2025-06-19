@@ -93,8 +93,7 @@ services:
       - ./grafana-provisioning/notifiers:/etc/grafana/provisioning/notifiers:ro
       - ./grafana-provisioning/plugins:/etc/grafana/provisioning/plugins:ro
     depends_on:
-      - prometheus
-      - loki
+      - prometheus - loki
 
 volumes:
   rsyslog-logs:
@@ -102,21 +101,25 @@ volumes:
     driver_opts:
       device: /mnt/storage_pool/logs/syslog
       o: bind
+      type: local
   loki-data:
     driver: local
     driver_opts:
       device: /mnt/storage_pool/logs/loki-data
       o: bind
+      type: local
   prometheus-data:
     driver: local
     driver_opts:
       device: /mnt/storage_pool/logs/prometheus-data
       o: bind
+      type: local
   grafana-data:
     driver: local
     driver_opts:
       device: /mnt/storage_pool/logs/grafana-data
       o: bind
+      type: local
     # Uncomment and update when NFS is ready:
     # driver: local
     # driver_opts:
@@ -128,6 +131,7 @@ volumes:
     driver_opts:
       device: /mnt/storage_pool/logs/grafana-logs
       o: bind
+      type: local
     # Uncomment and update when NFS is ready:
     # driver: local
     # driver_opts:
