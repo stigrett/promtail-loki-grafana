@@ -85,7 +85,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:
-      - "8080:8080"
+      - "18080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -99,10 +99,30 @@ services:
       - monitoring
 
 volumes:
-  prometheus_data:
-  grafana_data:
   loki_data:
-
+    driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/loki-data
+      o: bind
+      type: local
+  prometheus_data:
+    driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/prometheus-data
+      o: bind
+      type: local
+  grafana_data:
+    driver: local
+    driver_opts:
+      device: /mnt/storage_pool/logs/grafana-data
+      o: bind
+      type: local
+    # Uncomment and update when NFS is ready:
+    # driver: local
+    # driver_opts:
+    #   type: nfs
+    #   o: "addr=YOUR_NFS_SERVER,rw,nfsvers=4"
+    #   device: ":/path/to/grafana/data"
 networks:
   monitoring:
     driver: bridge
