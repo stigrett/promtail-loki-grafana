@@ -1,5 +1,4 @@
-version: '3.8'
-
+name: log-stack
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -46,7 +45,6 @@ services:
     volumes:
       - ./loki:/etc/loki
       - loki_data:/loki
-    command: -config.file=/etc/loki/local-config.yml
     networks:
       - monitoring
 
